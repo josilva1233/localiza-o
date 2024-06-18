@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Acessar a Câmera e Tirar Foto</title>
+    <script>
+        function capturePhoto() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({
+                        video: true
+                    })
+                    .then(function(stream) {
+                        var video = document.getElementById('video');
+                        video.srcObject = stream;
+                        video.play();
+                    })
+                    .catch(function(error) {
+                        console.error('Erro ao acessar a câmera: ', error);
+                    });
+            } else {
+                alert("Acesso à câmera não é suportado pelo seu navegador.");
+            }
+            var video = document.getElementById('video');
+            var canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            var context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Adicionar data e hora na imagem
+            var now = new Date();
+            var dateTimeString = now.toLocaleString();
+            context.font = "20px Arial";
+            context.fillStyle = "white";
+            context.fillText(dateTimeString, 10, canvas.height - 10);
+
+            var data = canvas.toDataURL('image/png');
+            document.getElementById('photo').src = data;
+            document.getElementById('photoData').value = data;
+
+            // Incluir data e hora nos campos de formulário
+            document.getElementById('dateTime').value = dateTimeString;
+
+            video.pause();
+            video.srcObject.getTracks().forEach(function(track) {
+                track.stop();
+            });
+        }
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+                alert("Geolocalização não é suportada pelo seu navegador.");
+            }
+        }
+
+        function showPosition(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            document.getElementById("latitude").value = latitude;
+            document.getElementById("longitude").value = longitude;
+        }
+    </script>
+</head>
+
+<body onload="getLocation()">
+    <h2>Localização</h2>
+
+    <form action="processa.php" method="post">
+        Latitude: <input type="text" id="latitude" name="latitude" readonly><br> Longitude: <input type="text" id="longitude" name="longitude" readonly><br>
+        <h2>Acessar a Câmera e Tirar Foto</h2>
+        <img id="photo" width="320" height="240"><br>
+        <input type="hidden" id="photoData" name="photoData">
+        <input type="hidden" id="dateTime" name="dateTime">
+        <input type="submit" value="Submit">
+    </form>
+
+
+    <video id="video" width="320" height="240" style="display:none;"></video><br>
+    <button onclick="capturePhoto()">Tirar Foto</button><br>
+
+</body>
+
+</html>
